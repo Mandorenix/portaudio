@@ -4,12 +4,16 @@ dnl
 dnl Dominic Mazzoni, Arve Knudsen, Stelios Bounanos
 dnl
 
-dnl Require autoconf >= 2.13
-AC_PREREQ(2.13)
+dnl Require autoconf >= 2.69
+AC_PREREQ([2.69])
+
+dnl cause a reasonable diagnostic if AX_CHECK_COMPILE_FLAG is not available
+m4_pattern_forbid([AX_CHECK_COMPILE_FLAG])
 
 dnl Init autoconf and make sure configure is being called
 dnl from the right directory
-AC_INIT([include/portaudio.h])
+AC_INIT
+AC_CONFIG_SRCDIR([include/portaudio.h])
 
 dnl This is is for testing compilation on Mac OS
 PAMAC_TEST_PROGRAM="
@@ -73,7 +77,7 @@ case "$target_os" in *mingw* | *cygwin*)
                  eval with_$api=yes
                  ;;
              *)
-                 AC_MSG_ERROR([unknown Windows API \"$api\" (do you need --help?)])
+                 AC_MSG_ERROR([unknown Windows API "$api" (do you need --help?)])
                  ;;
          esac
      done
@@ -122,8 +126,8 @@ dnl ASIO and CXX bindings need a C++ compiler
 if [[ "$with_asio" = "yes" ] || [ "$enable_cxx" = "yes" ]] ; then
        AC_PROG_CXX
 fi
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+
+LT_INIT(win32-dll)
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROG(AR, ar, no)
@@ -287,7 +291,7 @@ case "${host_os}" in
 
         if [[ "x$with_directx" = "xyes" ]]; then
             DXDIR="$with_dxdir"
-            add_objects src/hostapi/dsound/pa_win_ds.o src/hostapi/dsound/pa_win_ds_dynlink.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_coinitialize.o src/os/win/pa_win_waveformat.o
+            add_objects src/hostapi/dsound/pa_win_ds.o src/hostapi/dsound/pa_win_ds_dynlink.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_coinitialize.o src/os/win/pa_win_waveformat.o
             LIBS="${LIBS} -lwinmm -lm -ldsound -lole32"
             DLL_LIBS="${DLL_LIBS} -lwinmm -lm -L$DXDIR/lib -ldsound -lole32"
             #VC98="\"/c/Program Files/Microsoft Visual Studio/VC98/Include\""
@@ -298,7 +302,7 @@ case "${host_os}" in
 
         if [[ "x$with_asio" = "xyes" ]]; then
             ASIODIR="$with_asiodir"
-            add_objects src/hostapi/asio/pa_asio.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_coinitialize.o src/hostapi/asio/iasiothiscallresolver.o $ASIODIR/common/asio.o $ASIODIR/host/asiodrivers.o $ASIODIR/host/pc/asiolist.o
+            add_objects src/hostapi/asio/pa_asio.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_coinitialize.o src/hostapi/asio/iasiothiscallresolver.o $ASIODIR/common/asio.o $ASIODIR/host/asiodrivers.o $ASIODIR/host/pc/asiolist.o
             LIBS="${LIBS} -lwinmm -lm -lole32 -luuid"
             DLL_LIBS="${DLL_LIBS} -lwinmm -lm -lole32 -luuid"
             CFLAGS="$CFLAGS -ffast-math -fomit-frame-pointer -I\$(top_srcdir)/src/hostapi/asio -I$ASIODIR/host/pc -I$ASIODIR/common -I$ASIODIR/host -UPA_USE_ASIO -DPA_USE_ASIO=1 -DWINDOWS"
@@ -315,7 +319,7 @@ case "${host_os}" in
 
         if [[ "x$with_wdmks" = "xyes" ]]; then
             DXDIR="$with_dxdir"
-            add_objects src/hostapi/wdmks/pa_win_wdmks.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_wdmks_utils.o src/os/win/pa_win_waveformat.o
+            add_objects src/hostapi/wdmks/pa_win_wdmks.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_wdmks_utils.o src/os/win/pa_win_waveformat.o
             LIBS="${LIBS} -lwinmm -lm -luuid -lsetupapi -lole32"
             DLL_LIBS="${DLL_LIBS} -lwinmm -lm -L$DXDIR/lib -luuid -lsetupapi -lole32"
             #VC98="\"/c/Program Files/Microsoft Visual Studio/VC98/Include\""
@@ -325,7 +329,7 @@ case "${host_os}" in
         fi
 
         if [[ "x$with_wmme" = "xyes" ]]; then
-            add_objects src/hostapi/wmme/pa_win_wmme.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_waveformat.o
+            add_objects src/hostapi/wmme/pa_win_wmme.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_waveformat.o
             LIBS="${LIBS} -lwinmm -lm -lole32 -luuid"
             DLL_LIBS="${DLL_LIBS} -lwinmm"
             CFLAGS="$CFLAGS -UPA_USE_WMME -DPA_USE_WMME=1"
@@ -333,7 +337,7 @@ case "${host_os}" in
         fi
 
         if [[ "x$with_wasapi" = "xyes" ]]; then
-            add_objects src/hostapi/wasapi/pa_win_wasapi.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_coinitialize.o src/os/win/pa_win_waveformat.o
+            add_objects src/hostapi/wasapi/pa_win_wasapi.o src/common/pa_ringbuffer.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_coinitialize.o src/os/win/pa_win_waveformat.o
             LIBS="${LIBS} -lwinmm -lm -lole32 -luuid"
             DLL_LIBS="${DLL_LIBS} -lwinmm -lole32"
             CFLAGS="$CFLAGS -UPA_USE_WASAPI -DPA_USE_WASAPI=1"
@@ -344,7 +348,7 @@ case "${host_os}" in
   cygwin* )
         dnl Cygwin configuration
 
-        OTHER_OBJS="src/hostapi/wmme/pa_win_wmme.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_waveformat.o"
+        OTHER_OBJS="src/hostapi/wmme/pa_win_wmme.o src/os/win/pa_win_hostapis.o src/os/win/pa_win_util.o src/os/win/pa_win_version.o src/os/win/pa_win_waveformat.o"
         CFLAGS="$CFLAGS -I\$(top_srcdir)/src/os/win -DPA_USE_DS=0 -DPA_USE_WDMKS=0 -DPA_USE_ASIO=0 -DPA_USE_WASAPI=0 -DPA_USE_WMME=1"
         LIBS="-lwinmm -lm"
         PADLL="portaudio.dll"
@@ -353,41 +357,16 @@ case "${host_os}" in
         DLL_LIBS="${DLL_LIBS} -lwinmm"
         ;;
 
-  irix* )
-        dnl SGI IRIX audio library (AL) configuration (Pieter, oct 2-13, 2003).
-        dnl The 'dmedia' library is needed to read the Unadjusted System Time (UST).
-        dnl
-        AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR([IRIX posix thread library not found!]))
-        AC_CHECK_LIB(audio,   alOpenPort,     , AC_MSG_ERROR([IRIX audio library not found!]))
-        AC_CHECK_LIB(dmedia,  dmGetUST,       , AC_MSG_ERROR([IRIX digital media library not found!]))
-
-        dnl See the '#ifdef PA_USE_SGI' in file pa_unix/pa_unix_hostapis.c
-        dnl which selects the appropriate PaXXX_Initialize() function.
-        dnl
-        AC_DEFINE(PA_USE_SGI,1)
-
-        CFLAGS="$CFLAGS -I\$(top_srcdir)/src/os/unix"
-
-        dnl The _REENTRANT option for pthread safety. Perhaps not necessary but it 'll do no harm.
-        dnl
-        THREAD_CFLAGS="-D_REENTRANT"
-
-        OTHER_OBJS="pa_sgi/pa_sgi.o src/os/unix/pa_unix_hostapis.o src/os/unix/pa_unix_util.o"
-
-        dnl SGI books say -lpthread should be the last of the libs mentioned.
-        dnl
-        LIBS="-lm -ldmedia -laudio -lpthread"
-        PADLL="libportaudio.so"
-        SHARED_FLAGS=""
-        ;;
-
   *)
         dnl Unix configuration
 
         CFLAGS="$CFLAGS -I\$(top_srcdir)/src/os/unix"
 
-        AC_CHECK_LIB(pthread, pthread_create,[have_pthread="yes"],
-                AC_MSG_ERROR([libpthread not found!]))
+        AC_CHECK_LIB(pthread, pthread_join, have_pthread=yes, have_pthread=no)
+        AC_CHECK_LIB(c, pthread_join, have_libc_pthread=yes, have_libc_pthread=no)
+        if [[ "$have_pthread" = "no" ] && [ "$have_libc_pthread" = "no" ]] ; then
+           AC_MSG_ERROR([pthread not found in libpthread or libc!])
+        fi
 
         if [[ "$have_alsa" = "yes" ] && [ "$with_alsa" != "no" ]] ; then
            DLL_LIBS="$DLL_LIBS -lasound"
@@ -448,8 +427,16 @@ case "${host_os}" in
            AC_DEFINE(PA_USE_ASIHPI,1)
         fi
 
-        DLL_LIBS="$DLL_LIBS -lm -lpthread"
-        LIBS="$LIBS -lm -lpthread"
+        ## add math library
+        DLL_LIBS="$DLL_LIBS -lm"
+        LIBS="$LIBS -lm"
+
+        ## if pthread support is not in libc then we need -lpthread
+        if [[ "$have_libc_pthread" = "no" ]] ; then
+           DLL_LIBS="$DLL_LIBS -lpthread"
+           LIBS="$LIBS -lpthread"
+        fi
+
         PADLL="libportaudio.so"
 
         ## support sun cc compiler flags
@@ -491,7 +478,8 @@ fi
 AC_SUBST(WITH_ASIO_TRUE)
 AC_SUBST(WITH_ASIO_FALSE)
 
-AC_OUTPUT([Makefile portaudio-2.0.pc])
+AC_CONFIG_FILES([Makefile portaudio-2.0.pc])
+AC_OUTPUT
 
 AC_MSG_RESULT([
 Configuration summary:
